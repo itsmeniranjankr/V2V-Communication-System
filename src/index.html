@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V2V-Sync | Live Hazard Monitor</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap" async defer></script>
+    
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; }
+        #map { height: 85vh; width: 100%; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+        .header { background: #1a252f; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { margin: 0; font-size: 1.5rem; letter-spacing: 1px; }
+        .stats { display: flex; gap: 20px; }
+        .stat-item { background: #34495e; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; }
+        .legend { position: absolute; bottom: 30px; left: 20px; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,0.2); z-index: 100; }
+        .legend-item { display: flex; align-items: center; margin-bottom: 5px; font-size: 0.8rem; }
+        .dot { height: 10px; width: 10px; border-radius: 50%; margin-right: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🛰️ V2V-SYNC LIVE MONITOR</h1>
+        <div class="stats">
+            <div class="stat-item">System Status: <span style="color: #2ecc71;">Online</span></div>
+            <div class="stat-item" id="incident-count">Active Alerts: 0</div>
+        </div>
+    </div>
+
+    <div class="legend">
+        <strong>Map Legend</strong>
+        <div class="legend-item"><span class="dot" style="background: #e74c3c;"></span> Accident (Critical)</div>
+        <div class="legend-item"><span class="dot" style="background: #f1c40f;"></span> Pothole (Warning)</div>
+        <div class="legend-item"><span class="dot" style="background: #3498db;"></span> Road Block / Disaster</div>
+    </div>
+
+    <div id="map"></div>
+
+    <script>
+        let map;
+        const FIREBASE_URL = "https://your-v2v-project.firebaseio.com/incidents.json";
+
+        function initMap() {
+            // Centered on your college area (CUSAT)
+            const cusatCoord = { lat: 10.026, lng: 76.327 };
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 15,
+                center: cusatCoord,
+                styles: [ /* Optional: Add dark mode or custom styles here */ ]
+            });
+
+            // Fetch data every 5 seconds for live updates
+            fetchIncidents();
+            setInterval(fetchIncidents, 5000);
+        }
+
+        async function fetchIncidents() {
+            try {
+                const response = await fetch(FIREBASE_URL);
+                const data = await response.json();
+                updateMarkers(data);
+            } catch (error) {
+                console.error("Error fetching V2V data:", error);
+            }
+        }
+
+        function updateMarkers(data) {
+            let count = 0;
+            for (let id in data) {
+                count++;
+                const incident = data[id];
+                
+                // Determine color based on incident type
+                let markerColor = "yellow";
+                if (incident.type === "Accident Reported") markerColor = "red";
+                if (incident.type === "Disaster Zone") markerColor = "blue";
+
+                const marker = new google.maps.Marker({
+                    position: { lat: incident.latitude, lng: incident.longitude },
+                    map: map,
+                    title: incident.type,
+                    animation: google.maps.Animation.DROP,
+                    icon: `http://maps.google.com/mapfiles/ms/icons/${markerColor}-dot.png`
+                });
+
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `
+                        <div style="color: #333;">
+                            <strong>${incident.type}</strong><br>
+                            Severity: ${incident.severity}/5<br>
+                            <small>Source: Vehicle ID ${incident.vehicleID || '101'}</small>
+                        </div>`
+                });
+
+                marker.addListener("click", () => {
+                    infoWindow.open(map, marker);
+                });
+            }
+            document.getElementById('incident-count').innerText = `Active Alerts: ${count}`;
+        }
+    </script>
+</body>
+</html>
