@@ -1,0 +1,60 @@
+============================================================
+V2V COMMUNICATION SYSTEM - HARDWARE WIRING DIAGRAM
+============================================================
+
+Project: Standalone V2V Communication & Live Mapping
+Controller: ESP32 (Recommended) or Arduino Uno
+Communication: NRF24L01+ PA/LNA
+
+------------------------------------------------------------
+1. NRF24L01+ (RF Module) - SPI Communication
+------------------------------------------------------------
+NRF24L01 Pin | ESP32 Pin   | Arduino Uno Pin | Function
+-------------|-------------|-----------------|--------------
+VCC          | 3.3V        | 3.3V            | Power (DO NOT USE 5V)
+GND          | GND         | GND             | Ground
+CE           | GPIO 4      | D7              | Chip Enable
+CSN          | GPIO 5      | D8              | Chip Select
+SCK          | GPIO 18     | D13             | SPI Clock
+MOSI         | GPIO 23     | D11             | SPI Data In
+MISO         | GPIO 19     | D12             | SPI Data Out
+
+*Note: For NRF24L01, use a 10uF capacitor between VCC and GND to stabilize power.
+
+------------------------------------------------------------
+2. MPU6050 (Accelerometer/Gyroscope) - I2C Communication
+------------------------------------------------------------
+MPU6050 Pin  | ESP32 Pin   | Arduino Uno Pin | Function
+-------------|-------------|-----------------|--------------
+VCC          | 3.3V / 5V   | 5V              | Power
+GND          | GND         | GND             | Ground
+SCL          | GPIO 22     | A5              | I2C Clock
+SDA          | GPIO 21     | A4              | I2C Data
+
+------------------------------------------------------------
+3. NEO-6M (GPS Module) - UART Communication
+------------------------------------------------------------
+NEO-6M Pin   | ESP32 Pin   | Arduino Uno Pin | Function
+-------------|-------------|-----------------|--------------
+VCC          | 3.3V / 5V   | 5V              | Power
+GND          | GND         | GND             | Ground
+TX           | GPIO 16     | D3 (SoftSerial) | Transmit to RX
+RX           | GPIO 17     | D4 (SoftSerial) | Receive from TX
+
+------------------------------------------------------------
+4. INDICATORS (Buzzer & LED)
+------------------------------------------------------------
+Component    | ESP32 Pin   | Arduino Uno Pin | Function
+-------------|-------------|-----------------|--------------
+Buzzer (+)   | GPIO 12     | D5              | Audio Alert
+Red LED (+)  | GPIO 14     | D6              | Visual Alert (Critical)
+GND (All)    | GND         | GND             | Common Ground
+
+============================================================
+WIRING NOTES:
+1. Ensure the NRF24L01 is powered by a STABLE 3.3V source.
+2. If using ESP32, most pins are 3.3V logic; if using Uno, 
+   check if your GPS/RF modules need logic level shifters.
+3. Keep antenna modules away from high-frequency oscillators 
+   on the microcontroller to avoid interference.
+============================================================
